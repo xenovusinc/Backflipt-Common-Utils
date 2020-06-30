@@ -61,29 +61,8 @@ fun <E> Map<String, *>.getListOrNull(key: String) = try {
     null
 }
 
-/**
- * Extension Function for Map which returns the value for the given key as List
- * or throws Exception if the value for the given key is not present
- *
- * @receiver Map
- * @param key is the Key of the Map
- * @returns value for the given key as List
- */
-fun <E> Map<String, *>.getListOrException(key: String) = JsonParser.convertValue<List<E>>(this[key]!!)
 
-/**
- * Extension Function for Map which returns the value for the given key as List
- * or Default List if the value for the given key is not present
- *
- * @receiver Map
- * @param key is the Key of the Map
- * @param default is the Default List
- * @returns the value for the given key as List
- */
-fun <E> Map<String, *>.getListOrDefault(
-        key: String,
-        default: List<E> = emptyList()
-): List<E> = this.getListOrNull(key) ?: default
+
 
 /**
  * Extension Function for String which returns the Base64Decoded String
