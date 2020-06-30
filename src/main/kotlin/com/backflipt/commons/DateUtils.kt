@@ -38,14 +38,17 @@ fun getCurrentUtcTimeUsingEpoch(timeStamp: Long, dateFormatPattern: String): Str
  * @returns formatted date as string
  */
 
-fun getDateStringWithRespectToTimeZone(dateString: String,
-                                       timeZone: String,
-                                       dateFormatPattern: String,
-                                       returnFormatPattern: String): String {
+fun getDateStringWithRespectToZoneId(
+        dateString: String,
+        timeZone: String,
+        dateFormatPattern: String,
+        returnFormatPattern: String,
+        zoneId: String
+): String {
     val formatter = DateTimeFormatter.ofPattern(dateFormatPattern)
     val returnFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(returnFormatPattern)
     return LocalDateTime.parse(dateString, formatter)
-            .atZone(ZoneId.of("America/Los_Angeles"))
+            .atZone(ZoneId.of(zoneId))
             .withZoneSameInstant(ZoneId.of(timeZone))
             .format(returnFormatter)
 }
@@ -80,7 +83,7 @@ fun getCurrentDateRoundedBy30Mins(): LocalDateTime {
             .now()
             .withSecond(0)
             .let {
-                val minsToAdd = if(it.minute < 30) 30 - it.minute else 60 - it.minute
+                val minsToAdd = if (it.minute < 30) 30 - it.minute else 60 - it.minute
                 it.plusMinutes(minsToAdd.toLong())
             }
 }
@@ -102,21 +105,21 @@ fun formatDate(date: LocalDateTime, dateFormatPattern: String): String {
 
 //private val leadsFormatter= DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssz")
 
-    /**
-     * Gives [LocalDateTime] of current date time - [hours](current date time - 24 hours)
-     *
-     * @param hours No of Hours
-     * @return [String]
-     */
-    fun getDateTimeMinusHours(hours: Long, dateFormatPattern: String): String {
-        val leadsFormatter= DateTimeFormatter.ofPattern(dateFormatPattern)
-        return LocalDateTime
-                .now()
-                .minusHours(hours)
-                .withNano(0)
-                .atZone(ZoneId.systemDefault())
-                .withZoneSameInstant(ZoneOffset.UTC)
-                .format(leadsFormatter)
-    }
+/**
+ * Gives [LocalDateTime] of current date time - [hours](current date time - 24 hours)
+ *
+ * @param hours No of Hours
+ * @return [String]
+ */
+fun getDateTimeMinusHours(hours: Long, dateFormatPattern: String): String {
+    val leadsFormatter = DateTimeFormatter.ofPattern(dateFormatPattern)
+    return LocalDateTime
+            .now()
+            .minusHours(hours)
+            .withNano(0)
+            .atZone(ZoneId.systemDefault())
+            .withZoneSameInstant(ZoneOffset.UTC)
+            .format(leadsFormatter)
+}
 
 

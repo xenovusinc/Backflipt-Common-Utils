@@ -1,12 +1,12 @@
 package com.backflipt.commons
 
 import kotlinx.coroutines.reactive.awaitFirst
-import org.springframework.core.io.Resource
 import org.springframework.core.io.buffer.DataBufferUtils
 import org.springframework.http.HttpRequest
 import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.BodyExtractors
 import org.springframework.web.reactive.function.client.*
+import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
@@ -46,7 +46,6 @@ fun Map<String, *>.getStringOrDefault(
 ) = this.getStringOrNull(key) ?: default
 
 
-
 /**
  * Extension Function for Map which returns the value for the given key as List
  * or null if the value for the given key  is not present
@@ -60,8 +59,6 @@ fun <E> Map<String, *>.getListOrNull(key: String) = try {
 } catch (_: Exception) {
     null
 }
-
-
 
 
 /**
@@ -212,6 +209,7 @@ fun <K, V> Map<String, *>.getMapOrDefault(
 
 
 fun Any.serialize() = JsonParser.serialize(this)
+
 /**
  * Extension Function for String which returns the Map
  *
@@ -221,4 +219,140 @@ fun Any.serialize() = JsonParser.serialize(this)
 fun String.deserialize() = JsonParser.deserialize(this)
 
 inline fun <reified T : Any> Any.convertValue() = JsonParser.convertValue<T>(this)
+
+/**
+ * Extension Function for String which returns the urlEncoded String
+ *
+ * @receiver String
+ * @returns encoded string
+ */
+fun String.urlEncode(): String = URLEncoder.encode(this, Charsets.UTF_8.toString())
+
+fun String.urlDecode(): String = URLDecoder.decode(this, Charsets.UTF_8.toString())
+
+/**
+ * Creates Response Exception object while making http request call
+ *
+ * @param response: ClientResponse
+ * @param request: HttpRequest
+ * @return WebClientResponseException
+ */
+private suspend fun createSalesForceResponseException(
+        response: ClientResponse,
+        request: HttpRequest? = null
+): WebClientResponseException {
+    return DataBufferUtils
+            .join(response.body(BodyExtractors.toDataBuffers()))
+            .map { dataBuffer ->
+                val bytes = ByteArray(dataBuffer.readableByteCount())
+                dataBuffer.read(bytes)
+                DataBufferUtils.release(dataBuffer)
+                bytes
+            }
+            .defaultIfEmpty(ByteArray(0))
+            .map { bodyBytes ->
+                val charset = response.headers()
+                        .contentType()
+                        .map { it.charset }
+                        .orElse(StandardCharsets.ISO_8859_1)!!
+                val bodyString = bodyBytes.toString(Charset.defaultCharset())
+                val statusCode = if (response.rawStatusCode() == 403 && ("missing_oauth_token" == bodyString.toLowerCase() || "bad_oauth_token" in bodyString.toLowerCase())) HttpStatus.UNAUTHORIZED
+                else response.statusCode()
+                if (HttpStatus.resolve(response.rawStatusCode()) != null)
+                    WebClientResponseException.create(
+                            statusCode.value(),
+                            statusCode.reasonPhrase,
+                            response.headers().asHttpHeaders(),
+                            bodyBytes,
+                            charset,
+                            request
+                    )
+                else UnknownHttpStatusCodeException(response.rawStatusCode(), response.headers().asHttpHeaders(), bodyBytes, charset, request)
+            }
+            .awaitFirst()
+}
+
+/**
+ * Extension function for WebClient.RequestHeadersSpec which consumes if there is any error while making http call
+ *
+ * @receiver WebClient.RequestHeadersSpec
+ * @param onError: callback function which will be called if there is any error during http call
+ * @return ClientResponse
+ */
+suspend fun WebClient.RequestHeadersSpec<out WebClient.RequestHeadersSpec<*>>.awaitExchangeAndThrowSalesForceCustomError(
+        onError: ((WebClientResponseException) -> Unit)? = null
+): ClientResponse {
+    return awaitExchange()
+            .also { response ->
+                if (response.statusCode().isError) {
+                    val excp = createSalesForceResponseException(response)
+                    if (onError != null) onError(excp)
+                    throw excp
+                }
+            }
+}
+
+/**
+ * Creates Response Exception object while http request call specific to concur
+ *
+ * @param response: ClientResponse
+ * @param request: HttpRequest
+ * @return WebClientResponseException
+ */
+private suspend fun createConcurResponseException(
+        response: ClientResponse,
+        request: HttpRequest? = null
+): WebClientResponseException {
+    return DataBufferUtils
+            .join(response.body(BodyExtractors.toDataBuffers()))
+            .map { dataBuffer ->
+                val bytes = ByteArray(dataBuffer.readableByteCount())
+                dataBuffer.read(bytes)
+                DataBufferUtils.release(dataBuffer)
+                bytes
+            }
+            .defaultIfEmpty(ByteArray(0))
+            .map { bodyBytes ->
+                val charset = response.headers()
+                        .contentType()
+                        .map { it.charset }
+                        .orElse(StandardCharsets.ISO_8859_1)!!
+                val bodyString = bodyBytes.toString(Charset.defaultCharset())
+                val statusCode = if (response.rawStatusCode() == 403 &&
+                        ("token is expired" in bodyString.toLowerCase() || "incorrect credentials" in bodyString.toLowerCase())
+                ) HttpStatus.UNAUTHORIZED
+                else response.statusCode()
+                if (HttpStatus.resolve(response.rawStatusCode()) != null)
+                    WebClientResponseException.create(
+                            statusCode.value(),
+                            statusCode.reasonPhrase,
+                            response.headers().asHttpHeaders(),
+                            bodyBytes,
+                            charset,
+                            request
+                    )
+                else UnknownHttpStatusCodeException(response.rawStatusCode(), response.headers().asHttpHeaders(), bodyBytes, charset, request)
+            }
+            .awaitFirst()
+}
+
+/**
+ * Extension function for WebClient.RequestHeadersSpec which consumes if there is any error while making http call
+ *
+ * @receiver WebClient.RequestHeadersSpec
+ * @param onError: callback function which will be called if there is any error during http call
+ * @return ClientResponse
+ */
+suspend fun WebClient.RequestHeadersSpec<out WebClient.RequestHeadersSpec<*>>.awaitExchangeAndThrowConcurCustomError(
+        onError: ((WebClientResponseException) -> Unit)? = null
+): ClientResponse {
+    return awaitExchange()
+            .also { response ->
+                if (response.statusCode().isError) {
+                    val excp = createConcurResponseException(response)
+                    if (onError != null) onError(excp)
+                    throw excp
+                }
+            }
+}
 
