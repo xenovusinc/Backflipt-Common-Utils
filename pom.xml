@@ -7,25 +7,21 @@
 
     <groupId>com.backflipt</groupId>
     <artifactId>commons</artifactId>
-    <version>1.0.1</version>
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.2.4.RELEASE</version>
-    </parent>
+    <version>1.0.3</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>1.3.72</kotlin.version>
         <kotlin.coroutines.version>1.3.3</kotlin.coroutines.version>
-        <dokka.version>0.9.18</dokka.version>
-        <junit.version>4.12</junit.version>
-        <jacoco.version>0.8.5</jacoco.version>
+        <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
+        <spring-boot.version>2.2.0.M2</spring-boot.version>
+        <spring.version>5.2.0.M2</spring.version>
+        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <pmd.plugin.version>3.13.0</pmd.plugin.version>
         <logback.contrib.version>0.1.5</logback.contrib.version>
         <pmd.version>6.21.0</pmd.version>
         <kotlin.compiler.incremental>false</kotlin.compiler.incremental>
-        <main.class>com.backflipt.commons</main.class>
+        <main.class>com.backflipt.commons.ServerKt</main.class>
 
     </properties>
 
@@ -102,6 +98,37 @@
                     <layout>ZIP</layout>
                 </configuration>
             </plugin>
+                <!--            <plugin>-->
+                <!--                <groupId>org.springframework.boot</groupId>-->
+                <!--                <artifactId>spring-boot-maven-plugin</artifactId>-->
+                <!--                <configuration>-->
+                <!--                    <mainClass>${main.class}</mainClass>-->
+                <!--                    <layout>ZIP</layout>-->
+                <!--                </configuration>-->
+                <!--            </plugin>-->
+                <plugin>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-maven-plugin</artifactId>
+                    <version>${kotlin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>compile</id>
+                            <phase>process-sources</phase>
+                            <goals>
+                                <goal>compile</goal>
+                            </goals>
+                            <configuration>
+                                <args>
+                                    <arg>-Xjsr305=strict</arg>
+                                </args>
+                                <sourceDirs>
+                                    <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
+                                </sourceDirs>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -160,23 +187,9 @@
             <version>1.7.4</version>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webflux</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
+            <version>${spring.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
