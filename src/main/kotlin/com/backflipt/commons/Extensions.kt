@@ -1,6 +1,7 @@
 package com.backflipt.commons
 
 import kotlinx.coroutines.reactive.awaitFirst
+import org.springframework.core.io.Resource
 import org.springframework.core.io.buffer.DataBufferUtils
 import org.springframework.http.HttpRequest
 import org.springframework.http.HttpStatus
@@ -355,4 +356,24 @@ suspend fun WebClient.RequestHeadersSpec<out WebClient.RequestHeadersSpec<*>>.aw
                 }
             }
 }
+
+
+/**
+ * Extension function for Resource class which converts current resource to ByteArray
+ *
+ * @receiver Resource
+ * @return ByteArray
+ */
+fun Resource.readAsByteArray(): ByteArray = inputStream
+        .use {
+            it.readAllBytes()
+        }
+
+/**
+ * Extension function for Resource class which converts current resource to string
+ *
+ * @receiver Resource
+ * @return String
+ */
+fun Resource.readAsString() = String(readAsByteArray())
 
