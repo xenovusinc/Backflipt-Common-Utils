@@ -126,4 +126,53 @@ fun getDateTimeMinusHours(hours: Long, dateFormatPattern: String): String {
             .format(leadsFormatter)
 }
 
+/**
+ * Gives the formattedDateString
+ *
+ * @returns the Formatted String
+ */
+fun formatDateToString(date: Date, datePattern: String): String {
+    val formatter = SimpleDateFormat(datePattern)
+    return formatter.format(date)
+}
+
+/**
+ * Gives the Formatted SubmitDate String.
+ * For example:
+ * if submit date is 07:22 AM, it will return 2020-07-14T12:52:00Z
+ * if submit date is 07:22 PM, it will return 2020-07-15T00:52:00Z
+ * if submit date is 12:22 AM, it will return 2020-07-14T17:52:00Z
+ *
+ * @returns Formatted String
+ */
+fun getSubmittedDateString(submittedTime: String, dateFormatPattern: String): String {
+    return if (submittedTime.contains("AM") || submittedTime.contains("PM")) {
+        try {
+            val currentTime = System.currentTimeMillis()
+            val midNightTime = (currentTime - currentTime % (24 * 60 * 60 * 1000))
+            val (timeString, period) = submittedTime.split(" ")
+            val (hours, minutes) = timeString.split(":").map {
+                it.toInt()
+            }
+            val formattedTimeStamp = if (period == "AM") {
+                val timeStampToBeAdded = (hours * 60 + minutes) * 60 * 1000
+                midNightTime.plus(timeStampToBeAdded)
+            } else {
+                if (period == "PM" && hours == 12) {
+                    val timeStampToBeAdded = (hours * 60 + minutes) * 60 * 1000
+                    midNightTime.plus(timeStampToBeAdded)
+                } else {
+                    val timeStampToBeAdded = (hours * 60 + minutes) * 60 * 1000 + (12 * 60 * 60 * 1000)
+                    midNightTime.plus(timeStampToBeAdded)
+                }
+            }
+            formatDateToString(Date(formattedTimeStamp), dateFormatPattern)
+        } catch (e: Exception) {
+            submittedTime
+        }
+    } else {
+        submittedTime
+    }
+}
+
 
