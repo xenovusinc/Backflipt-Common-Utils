@@ -83,8 +83,12 @@ fun getCurrentDateRoundedBy30Mins(): LocalDateTime {
             .now()
             .withSecond(0)
             .let {
-                val minsToAdd = if (it.minute < 30) 30 - it.minute else 60 - it.minute
-                it.plusMinutes(minsToAdd.toLong())
+                when {
+                    it.minute == 0 -> it
+                    it.minute < 30 -> it.withMinute(30)
+                    it.minute == 30 -> it
+                    else -> it.withMinute(0).plusHours(1)
+                }
             }
 }
 
