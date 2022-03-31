@@ -15,7 +15,7 @@
         <kotlin.coroutines.version>1.3.3</kotlin.coroutines.version>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
         <spring-boot.version>2.2.0.M2</spring-boot.version>
-        <spring.version>5.2.0.M2</spring.version>
+        <spring.version>5.2.21.BUILD-SNAPSHOT</spring.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <pmd.plugin.version>3.13.0</pmd.plugin.version>
         <logback.contrib.version>0.1.5</logback.contrib.version>
